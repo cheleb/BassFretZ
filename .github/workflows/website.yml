@@ -28,4 +28,5 @@ jobs:
     uses: WorldOfScala/actions/.github/workflows/gh-pages.yml@master
     with:
       script: ./scripts/gh-pages.sh
+      site-path: dist
     secrets: inherit
