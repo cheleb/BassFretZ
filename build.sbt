@@ -28,6 +28,6 @@ lazy val root = project
     libraryDependencies ++= Seq(
       "org.scala-js" %%% "scalajs-dom" % "2.8.0",
       "dev.cheleb" %%% "threesjs" % "0.1.0",
-      "com.raquo" %%% "laminar" % "17.2.1"
+      "com.raquo" %%% "laminar" % "18.0.0-M5"
     )
   )
