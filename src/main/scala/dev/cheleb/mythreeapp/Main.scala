@@ -56,7 +56,7 @@ import scala.scalajs.js
   // =====================================================
   // REACTIVE STATE
   // =====================================================
-  val rootKeyVar           = Var("A")
+  val rootKeyVar = Var("A")
   val selectedIntervalsVar = Var(Set(0, 4, 7, 10))
 
   // Track note meshes so we can clear them on re-render
@@ -77,7 +77,7 @@ import scala.scalajs.js
 
     positions.foreach { case (stringIdx, fret, semitone, _noteName) =>
       val isRoot = semitone == 0
-      val color  = Scale.intervalColors.getOrElse(semitone, 0xffffff)
+      val color = Scale.intervalColors.getOrElse(semitone, 0xffffff)
       val radius = if isRoot then 0.14 else 0.08
 
       val sphere = Mesh(
@@ -116,13 +116,12 @@ import scala.scalajs.js
   // =====================================================
   // WIRE STATE -> THREE.JS
   // =====================================================
-  val appOwner = new Owner {}
 
   rootKeyVar.signal
     .combineWith(selectedIntervalsVar.signal)
     .foreach { case (rootKey, intervals) =>
       renderSelection(rootKey, intervals)
-    }(appOwner)
+    }(using unsafeWindowOwner)
 
   // =====================================================
   // LAMINAR CONTROL PANEL

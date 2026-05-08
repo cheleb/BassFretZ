@@ -5,8 +5,8 @@ import com.raquo.laminar.api.L.*
 object ControlPanel:
 
   def render(
-    rootKeyVar: Var[String],
-    selectedIntervalsVar: Var[Set[Int]]
+      rootKeyVar: Var[String],
+      selectedIntervalsVar: Var[Set[Int]]
   ): Element =
 
     div(
@@ -15,7 +15,7 @@ object ControlPanel:
 
       div(
         styleAttr := "font-size: 16px; font-weight: bold; margin-bottom: 10px;",
-        "Bass Neck Explorer"
+        "BassFretZ"
       ),
 
       div(styleAttr := "margin-bottom: 4px; color: #ccc;", "Root note:"),
@@ -70,11 +70,13 @@ object ControlPanel:
             Scale.commonIntervals
               .filter { case (s, _, _) => selectedIntervals.contains(s) }
               .map { case (semitone, shortLabel, longLabel) =>
-                val note     = Scale.chromaticNotes((rootIndex + semitone) % 12)
+                val note = Scale.chromaticNotes((rootIndex + semitone) % 12)
                 val colorHex = f"#${Scale.intervalColors(semitone)}%06x"
                 div(
                   styleAttr := "display: flex; align-items: center; gap: 8px;",
-                  span(styleAttr := s"display:inline-block;width:10px;height:10px;background:$colorHex;border:1px solid #666;border-radius:2px;"),
+                  span(
+                    styleAttr := s"display:inline-block;width:10px;height:10px;background:$colorHex;border:1px solid #666;border-radius:2px;"
+                  ),
                   span(styleAttr := "min-width: 24px; color:#fff;", shortLabel),
                   span(styleAttr := "color:#aaa;", longLabel),
                   span(styleAttr := "margin-left:auto; color:#ffd;", note)
