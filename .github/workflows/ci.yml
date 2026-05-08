@@ -22,6 +22,8 @@ jobs:
         uses: actions/setup-node@v6
         with:
           node-version: 23
+      - name: Set up bun
+        uses: oven-sh/setup-bun@v2
       - name: Cache SBT
         uses: actions/cache@v5
         with:
