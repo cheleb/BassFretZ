@@ -19,3 +19,95 @@ html, body {
 canvas {
   display: block;
 }
+
+/* Control Panel */
+#control-panel {
+  position: fixed;
+  top: 20px;
+  left: 20px;
+  color: #ffffff;
+  font-family: monospace;
+  font-size: 14px;
+  background: rgba(0, 0, 0, 0.75);
+  padding: 14px 18px;
+  border-radius: 6px;
+  border: 1px solid #444;
+  z-index: 100;
+  min-width: 220px;
+  max-width: 280px;
+}
+
+.panel-title {
+  font-size: 16px;
+  font-weight: bold;
+  margin-bottom: 10px;
+}
+
+.panel-label {
+  margin-bottom: 4px;
+  color: #ccc;
+}
+
+.panel-select {
+  width: 100%;
+  padding: 4px 6px;
+  background: #222;
+  color: #fff;
+  border: 1px solid #555;
+  border-radius: 4px;
+  font-family: monospace;
+  font-size: 14px;
+  margin-bottom: 12px;
+}
+
+.intervals-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px 10px;
+  margin-bottom: 12px;
+}
+
+.interval-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  user-select: none;
+}
+
+.color-swatch {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border: 1px solid #666;
+  border-radius: 2px;
+  flex-shrink: 0;
+}
+
+/* Legend */
+#legend {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  font-size: 13px;
+}
+
+.legend-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.legend-short {
+  min-width: 24px;
+  color: #fff;
+}
+
+.legend-long {
+  color: #aaa;
+}
+
+.legend-note {
+  margin-left: auto;
+  color: #ffd;
+}
