@@ -15,7 +15,7 @@ inThisBuild(
   )
 )
 
-lazy val root = project
+lazy val bassfretz = project
   .in(file("."))
   .enablePlugins(ScalaJSPlugin)
   .settings(
