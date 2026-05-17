@@ -74,7 +74,7 @@ import scala.scalajs.js
   // NOTE CIRCLE
   // =====================================================
   val noteCircleState = NoteCircleState(rootKeyVar)
-  val noteCircleRenderer = NoteCircleRenderer(scene, noteCircleState)
+  val noteCircleRenderer = NoteCircleRenderer(scene, noteCircleState, camera)
   val noteCircleInteraction = NoteCircleInteraction(
     camera,
     renderer.domElement.asInstanceOf[dom.html.Canvas],
@@ -172,6 +172,7 @@ import scala.scalajs.js
   // =====================================================
   val animate: () => Unit = () =>
     controls.update()
+    noteCircleRenderer.updateFaceCamera()
     renderer.render(scene, camera)
     labelRenderer.render(scene, camera)
 

@@ -23,9 +23,18 @@ import scala.scalajs.js
 class NoteCircleRenderer(
     scene: Scene,
     state: NoteCircleState,
+    camera: Camera,
     radius: Double = NoteCircleGeometry.defaultRadius,
-    centerOffset: Vector3 = Vector3(0, 6, 0)
+    centerOffset: Vector3 = Vector3(5, 4, 0)
 ):
+
+  /** Update the group's rotation so it always faces the camera. */
+  def updateFaceCamera(): Unit =
+    // Make the group look at the camera position. Since the group's guide circle is in the XY plane,
+    // and we want the circle's normal (Z axis) to face the camera, we lookAt a point in the opposite
+    // direction from the group to the camera.
+    val target = new Vector3(camera.position.x, camera.position.y, camera.position.z)
+    group.lookAt(target)
 
   /** Master group; parent of guide circle, sphere meshes, and label objects. */
   val group: Group = Group()
