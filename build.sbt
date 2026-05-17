@@ -23,7 +23,7 @@ lazy val root = project
     scalaJSLinkerConfig ~= {
       _.withModuleKind(ModuleKind.ESModule)
         .withSourceMap(true)
-        .withModuleSplitStyle(ModuleSplitStyle.SmallModulesFor(List("dev.cheleb.mythreeapp")))
+        .withModuleSplitStyle(ModuleSplitStyle.SmallModulesFor(List("dev.cheleb.bassfretz")))
     },
     libraryDependencies ++= Seq(
       "org.scala-js" %%% "scalajs-dom" % "2.8.0",

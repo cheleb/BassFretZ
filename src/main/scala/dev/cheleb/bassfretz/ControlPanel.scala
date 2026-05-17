@@ -1,4 +1,4 @@
-package dev.cheleb.mythreeapp
+package dev.cheleb.bassfretz
 
 import com.raquo.laminar.api.L.*
 
