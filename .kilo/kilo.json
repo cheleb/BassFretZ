@@ -15,6 +15,10 @@
     "BassFretZ-metals": {
       "url": "http://localhost:53556/mcp",
       "type": "remote"
+    },
+    "petalite-gasoline-metals": {
+      "url": "http://localhost:49693/mcp",
+      "type": "remote"
     }
   }
 }

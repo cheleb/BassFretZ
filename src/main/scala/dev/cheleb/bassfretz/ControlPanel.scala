@@ -6,7 +6,8 @@ object ControlPanel:
 
   def render(
       rootKeyVar: Var[String],
-      selectedIntervalsVar: Var[Set[Int]]
+      selectedIntervalsVar: Var[Set[Int]],
+      noteCircleState: NoteCircleState
   ): Element =
 
     div(
@@ -80,5 +81,32 @@ object ControlPanel:
                 )
               }
         }
+      ),
+
+      // ----------------------------------------------------------------------
+      // Note Circle section
+      // ----------------------------------------------------------------------
+      div(
+        cls := "panel-section",
+        div(cls := "panel-title", "Note Circle"),
+        label(
+          cls := "panel-label",
+          input(
+            typ := "checkbox",
+            checked <-- noteCircleState.useFrenchNotation.signal,
+            onChange.mapToChecked --> noteCircleState.useFrenchNotation.writer
+          ),
+          " French Notation"
+        ),
+        div(
+          cls := "panel-label",
+          "Selected: ",
+          child.text <-- noteCircleState.selectedNoteName
+        ),
+        div(
+          cls := "panel-label",
+          "Major Scale: ",
+          child.text <-- noteCircleState.currentScaleLabels.map(_.mkString(" "))
+        )
       )
     )
