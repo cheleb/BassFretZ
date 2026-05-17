@@ -36,7 +36,10 @@ class NoteVisual(
   val mesh: Mesh = Mesh(geom, mat)
   mesh.position.copy(position)
   // Stash the chromatic index for raycaster-based lookup in NoteCircleInteraction.
-  mesh.userData.asInstanceOf[js.Dynamic].noteIndex = index
+  // Assigning a fresh literal rather than mutating `userData` in place avoids relying
+  // on Three.js's default `{}` initialization (the facade types it as `js.Object`,
+  // which could be `null`/`undefined` in some configurations).
+  mesh.userData = js.Dynamic.literal(noteIndex = index).asInstanceOf[js.Object]
 
   // ---------------------------------------------------------------------------
   // HTML label (wrapped in CSS2DObject by the renderer)

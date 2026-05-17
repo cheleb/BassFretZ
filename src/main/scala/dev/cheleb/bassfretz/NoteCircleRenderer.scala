@@ -1,6 +1,7 @@
 package dev.cheleb.bassfretz
 
 import THREE.*
+import com.raquo.airstream.ownership.Subscription
 import com.raquo.laminar.api.L.*
 import scala.scalajs.js
 
@@ -34,26 +35,24 @@ class NoteCircleRenderer(
   private val guide: Group = NoteCircleGeometry.createCircleGuide(radius)
   group.add(guide)
 
-  // 12 note visuals, in chromatic order (C..B).
+  // 12 note visuals, in chromatic order (C..B). Labels are tracked separately so dispose() can
+  // remove them from the scene graph (and let CSS2DRenderer drop their DOM nodes on the next render).
   private val notes: Array[NoteVisual] =
-    NoteCircleGeometry
-      .createNotePositions(radius)
-      .zipWithIndex
-      .map { case (pos, idx) =>
-        val nv = NoteVisual(idx, pos)
-        group.add(nv.mesh)
+    NoteCircleGeometry.createNotePositions(radius).zipWithIndex.map { case (pos, idx) =>
+      val nv = NoteVisual(idx, pos)
+      group.add(nv.mesh)
 
-        // Wrap the label div as a CSS2DObject and place it slightly outside the sphere
-        // along the radial direction (radius * 1.25).
-        val labelObj = new CSS2DObjectFacade(nv.labelDiv)
-        val labelX = pos.x.getOrElse(0.0) * 1.25
-        val labelY = pos.y.getOrElse(0.0) * 1.25
-        val labelZ = pos.z.getOrElse(0.0) * 1.25
-        labelObj.position.set(labelX, labelY, labelZ)
-        group.add(labelObj)
+      // Wrap the label div as a CSS2DObject and place it slightly outside the sphere
+      // along the radial direction (radius * 1.25).
+      val labelObj = new CSS2DObjectFacade(nv.labelDiv)
+      val labelX = pos.x.getOrElse(0.0) * 1.25
+      val labelY = pos.y.getOrElse(0.0) * 1.25
+      val labelZ = pos.z.getOrElse(0.0) * 1.25
+      labelObj.position.set(labelX, labelY, labelZ)
+      group.add(labelObj)
 
-        nv
-      }
+      nv
+    }
 
   /** Mesh array for raycasting (in chromatic order). */
   val noteMeshes: js.Array[Mesh] = js.Array(notes.map(_.mesh)*)
@@ -61,24 +60,40 @@ class NoteCircleRenderer(
   scene.add(group)
 
   // ---------------------------------------------------------------------------
-  // Reactive wiring: redraw notes whenever (root, scale, notation) changes
+  // Reactive wiring: redraw notes whenever (root, notation) changes.
+  //
+  // We derive the major scale inline rather than combining state.currentScaleNotes with
+  // state.selectedNoteIndex — the latter would emit twice per root change (once for the
+  // new index with the old scale, once after the scale recomputes). One coherent update
+  // per change is both cleaner and avoids a one-frame flicker.
   // ---------------------------------------------------------------------------
-  state.selectedNoteIndex
-    .combineWith(state.currentScaleNotes)
-    .combineWith(state.useFrenchNotation.signal)
-    .foreach { case (rootIdx, scaleNotes, useFrench) =>
-      val scaleSet = scaleNotes.toSet
-      var i = 0
-      while i < notes.length do
-        val n = notes(i)
-        n.updateLabel(NoteCircleTheory.indexToNote(i, useFrench))
-        if i == rootIdx then n.setSelectedState()
-        else if scaleSet.contains(i) then n.setInScaleState()
-        else n.setNormalState()
-        i += 1
-    }(using unsafeWindowOwner)
+  private val subscription: Subscription =
+    state.selectedNoteIndex
+      .combineWith(state.useFrenchNotation.signal)
+      .foreach { case (rootIdx, useFrench) =>
+        val scaleSet = NoteCircleTheory.getMajorScale(rootIdx).toSet
+        var i = 0
+        while i < notes.length do
+          val n = notes(i)
+          n.updateLabel(NoteCircleTheory.indexToNote(i, useFrench))
+          if i == rootIdx then n.setSelectedState()
+          else if scaleSet.contains(i) then n.setInScaleState()
+          else n.setNormalState()
+          i += 1
+      }(using unsafeWindowOwner)
 
-  /** Free GPU resources for every note and remove the group from the scene. */
+  /** Free GPU resources (sphere geometry/material for every note + the guide line) and detach scene/state. */
   def dispose(): Unit =
+    // Stop reacting to state changes.
+    subscription.kill()
+    // Dispose every note's GPU resources.
     notes.foreach(_.dispose())
+    // Dispose the guide line's geometry and material (they are not owned by NoteVisual).
+    guide.children.foreach { obj =>
+      val dyn = obj.asInstanceOf[js.Dynamic]
+      if !js.isUndefined(dyn.geometry) then dyn.geometry.dispose()
+      if !js.isUndefined(dyn.material) then dyn.material.dispose()
+    }
+    // Removing the group from the scene also detaches every CSS2DObject; CSS2DRenderer will
+    // drop the orphan label <div>s on its next render call.
     scene.remove(group)
