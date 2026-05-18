@@ -68,7 +68,13 @@ import scala.scalajs.js
   // REACTIVE STATE
   // =====================================================
   val rootKeyVar = Var("A")
-  val selectedIntervalsVar = Var(Set(0, 4, 7, 10))
+  val scaleTypeVar = Var("major")
+  val selectedIntervalsVar = Var(Set(0, 2, 4, 5, 7, 9, 11)) // Default to major scale
+
+  // When scale type changes, update selected intervals to match the scale pattern
+  scaleTypeVar.signal.foreach { scaleType =>
+    selectedIntervalsVar.set(Scale.scaleIntervals(scaleType).toSet)
+  }(using unsafeWindowOwner)
 
   // =====================================================
   // NOTE CIRCLE
@@ -147,12 +153,12 @@ import scala.scalajs.js
       renderSelection(rootKey, intervals)
     }(using unsafeWindowOwner)
 
-  // =====================================================
-  // LAMINAR CONTROL PANEL
-  // =====================================================
-  val panelContainer = dom.document.createElement("div")
-  dom.document.body.appendChild(panelContainer)
-  render(panelContainer, ControlPanel.render(rootKeyVar, selectedIntervalsVar, noteCircleState))
+   // =====================================================
+   // LAMINAR CONTROL PANEL
+   // =====================================================
+   val panelContainer = dom.document.createElement("div")
+   dom.document.body.appendChild(panelContainer)
+   render(panelContainer, ControlPanel.render(rootKeyVar, scaleTypeVar, selectedIntervalsVar, noteCircleState))
 
   // =====================================================
   // BOTTOM HINT
