@@ -12,13 +12,15 @@ class NoteCircleStateSuite extends munit.FunSuite:
 
   test("initial state: rootKeyVar=C maps to selectedNoteIndex=0"):
     val rootVar = Var("C")
-    val state = NoteCircleState(rootVar)
+    val scaleTypeVar = Var("major")
+    val state = NoteCircleState(rootVar, scaleTypeVar)
     val idx = latest(state.selectedNoteIndex)
     assertEquals(idx(), 0)
 
   test("selectNoteByIndex(7) sets rootKeyVar to G"):
     val rootVar = Var("C")
-    val state = NoteCircleState(rootVar)
+    val scaleTypeVar = Var("major")
+    val state = NoteCircleState(rootVar, scaleTypeVar)
     val idx = latest(state.selectedNoteIndex)
     state.selectNoteByIndex(7)
     assertEquals(rootVar.now(), "G")
@@ -26,13 +28,16 @@ class NoteCircleStateSuite extends munit.FunSuite:
 
   test("currentScaleNotes follows the selected root (A major)"):
     val rootVar = Var("C")
-    val state = NoteCircleState(rootVar)
+    val scaleTypeVar = Var("major")
+    val state = NoteCircleState(rootVar, scaleTypeVar)
     val notes = latest(state.currentScaleNotes)
     state.selectNoteByIndex(9)
     assertEquals(notes(), NoteCircleTheory.getMajorScale(9))
 
   test("toggleNotation flips useFrenchNotation"):
-    val state = NoteCircleState(Var("C"))
+    val rootVar = Var("C")
+    val scaleTypeVar = Var("major")
+    val state = NoteCircleState(rootVar, scaleTypeVar)
     val french = latest(state.useFrenchNotation.signal)
     assertEquals(french(), false)
     state.toggleNotation()
@@ -42,7 +47,8 @@ class NoteCircleStateSuite extends munit.FunSuite:
 
   test("setNotation(true) + selectNoteByIndex(0) yields selectedNoteName=Do"):
     val rootVar = Var("A")
-    val state = NoteCircleState(rootVar)
+    val scaleTypeVar = Var("major")
+    val state = NoteCircleState(rootVar, scaleTypeVar)
     val name = latest(state.selectedNoteName)
     state.setNotation(true)
     state.selectNoteByIndex(0)
@@ -50,7 +56,8 @@ class NoteCircleStateSuite extends munit.FunSuite:
 
   test("currentScaleLabels reflects the active notation"):
     val rootVar = Var("C")
-    val state = NoteCircleState(rootVar)
+    val scaleTypeVar = Var("major")
+    val state = NoteCircleState(rootVar, scaleTypeVar)
     val labels = latest(state.currentScaleLabels)
     // C major in letters
     assertEquals(labels(), List("C", "D", "E", "F", "G", "A", "B"))
@@ -59,6 +66,8 @@ class NoteCircleStateSuite extends munit.FunSuite:
     assertEquals(labels(), List("Do", "Ré", "Mi", "Fa", "Sol", "La", "Si"))
 
   test("selectNoteByIndex rejects out-of-range index"):
-    val state = NoteCircleState(Var("C"))
+    val rootVar = Var("C")
+    val scaleTypeVar = Var("major")
+    val state = NoteCircleState(rootVar, scaleTypeVar)
     intercept[IllegalArgumentException](state.selectNoteByIndex(-1))
     intercept[IllegalArgumentException](state.selectNoteByIndex(12))

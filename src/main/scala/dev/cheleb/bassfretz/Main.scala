@@ -79,7 +79,7 @@ import scala.scalajs.js
   // =====================================================
   // NOTE CIRCLE
   // =====================================================
-  val noteCircleState = NoteCircleState(rootKeyVar)
+  val noteCircleState = NoteCircleState(rootKeyVar, scaleTypeVar)
   val noteCircleRenderer = NoteCircleRenderer(scene, noteCircleState, camera)
   val noteCircleInteraction = NoteCircleInteraction(
     camera,

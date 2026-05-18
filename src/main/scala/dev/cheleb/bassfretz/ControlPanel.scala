@@ -120,7 +120,7 @@ object ControlPanel:
       ),
       div(
         cls := "panel-label",
-        "Major Scale: ",
+        "Current Scale: ",
         child.text <-- noteCircleState.currentScaleLabels.map(_.mkString(" "))
       )
     )

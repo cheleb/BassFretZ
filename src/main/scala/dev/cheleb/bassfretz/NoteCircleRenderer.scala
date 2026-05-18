@@ -68,28 +68,29 @@ class NoteCircleRenderer(
 
   scene.add(group)
 
-  // ---------------------------------------------------------------------------
-  // Reactive wiring: redraw notes whenever (root, notation) changes.
-  //
-  // We derive the major scale inline rather than combining state.currentScaleNotes with
-  // state.selectedNoteIndex — the latter would emit twice per root change (once for the
-  // new index with the old scale, once after the scale recomputes). One coherent update
-  // per change is both cleaner and avoids a one-frame flicker.
-  // ---------------------------------------------------------------------------
-  private val subscription: Subscription =
-    state.selectedNoteIndex
-      .combineWith(state.useFrenchNotation.signal)
-      .foreach { case (rootIdx, useFrench) =>
-        val scaleSet = NoteCircleTheory.getMajorScale(rootIdx).toSet
-        var i = 0
-        while i < notes.length do
-          val n = notes(i)
-          n.updateLabel(NoteCircleTheory.indexToNote(i, useFrench))
-          if i == rootIdx then n.setSelectedState()
-          else if scaleSet.contains(i) then n.setInScaleState()
-          else n.setNormalState()
-          i += 1
-      }(using unsafeWindowOwner)
+   // ---------------------------------------------------------------------------
+   // Reactive wiring: redraw notes whenever (root, scale type, notation) changes.
+   //
+   // Combine all three signals for coherent updates.
+   // ---------------------------------------------------------------------------
+   private val subscription: Subscription =
+     state.selectedNoteIndex
+       .combineWith(state.currentScaleNotes)
+       .combineWith(state.useFrenchNotation.signal)
+       .foreach { tuple =>
+         val selectedIdx = tuple._1
+         val scaleNotes = tuple._2
+         val useFrench = tuple._3
+         val scaleSet = scaleNotes.toSet
+         var i = 0
+         while i < notes.length do
+           val n = notes(i)
+           n.updateLabel(NoteCircleTheory.indexToNote(i, useFrench))
+           if selectedIdx == i then n.setSelectedState()
+           else if scaleSet.contains(i) then n.setInScaleState()
+           else n.setNormalState()
+           i += 1
+       }(using unsafeWindowOwner)
 
   /** Free GPU resources (sphere geometry/material for every note + the guide line) and detach scene/state. */
   def dispose(): Unit =

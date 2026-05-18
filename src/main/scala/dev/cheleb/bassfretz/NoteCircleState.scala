@@ -3,11 +3,11 @@ package dev.cheleb.bassfretz
 import com.raquo.laminar.api.L.*
 
 /** Reactive state for the note-circle feature.
-  *
-  * Bridges between the existing `rootKeyVar: Var[String]` (note **names**) and the index-based circle (0..11). The
-  * notation-mode toggle is local to this feature.
-  */
-class NoteCircleState(rootKeyVar: Var[String]):
+ *
+ * Bridges between the existing `rootKeyVar: Var[String]` (note **names**) and the index-based circle (0..11). The
+ * notation-mode toggle is local to this feature.
+ */
+class NoteCircleState(rootKeyVar: Var[String], scaleTypeVar: Var[String]):
 
   /** Toggle between letter notation (`C, C#, D, ...`) and French solfège (`Do, Do#, Ré, ...`). */
   val useFrenchNotation: Var[Boolean] = Var(false)
@@ -22,19 +22,21 @@ class NoteCircleState(rootKeyVar: Var[String]):
       NoteCircleTheory.indexToNote(idx, fr)
     }
 
-  /** The 7 chromatic indices that make up the major scale of the current root. */
+  /** The 7 chromatic indices that make up the current scale of the current root. */
   val currentScaleNotes: Signal[List[Int]] =
-    selectedNoteIndex.map(NoteCircleTheory.getMajorScale)
+    selectedNoteIndex.combineWith(scaleTypeVar.signal).map { case (rootIndex, scaleType) =>
+      NoteCircleTheory.getScaleFromType(rootIndex, scaleType)
+    }
 
-  /** The 7 scale notes as labels, in the current notation. */
+  /** The scale notes as labels, in the current notation. */
   val currentScaleLabels: Signal[List[String]] =
     currentScaleNotes.combineWith(useFrenchNotation.signal).map { case (notes, fr) =>
       notes.map(i => NoteCircleTheory.indexToNote(i, fr))
     }
 
-  // ---------------------------------------------------------------------------
-  // Mutators
-  // ---------------------------------------------------------------------------
+// ---------------------------------------------------------------------------
+// Mutators
+// ---------------------------------------------------------------------------
 
   /** Set the root by chromatic index (0..11). Throws on out-of-range input. */
   def selectNoteByIndex(index: Int): Unit =
