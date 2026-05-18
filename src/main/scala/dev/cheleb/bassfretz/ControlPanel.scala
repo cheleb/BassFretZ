@@ -8,7 +8,8 @@ object ControlPanel:
       rootKeyVar: Var[String],
       scaleTypeVar: Var[String],
       selectedIntervalsVar: Var[Set[Int]],
-      noteCircleState: NoteCircleState
+      noteCircleState: NoteCircleState,
+      practiceMode: PracticeMode
   ): Element =
 
   div(
@@ -95,6 +96,46 @@ object ControlPanel:
                 span(cls := "legend-note", note)
               )
             }
+      }
+    ),
+
+    // ----------------------------------------------------------------------
+    // Practice Mode section
+    // ----------------------------------------------------------------------
+    div(
+      cls := "panel-section",
+      div(cls := "panel-label", "Practice:"),
+      button(
+        cls := "panel-button",
+        child.text <-- practiceMode.isActive.signal.map(active =>
+          if active then "⏹ Stop Practice" else "▶ Practice"
+        ),
+        styleAttr <-- practiceMode.isActive.signal.map(active =>
+          if active then
+            "background: #cc3333; color: white; border: none; padding: 6px 14px; border-radius: 4px; cursor: pointer; font-size: 13px; width: 100%;"
+          else
+            "background: #33aa55; color: white; border: none; padding: 6px 14px; border-radius: 4px; cursor: pointer; font-size: 13px; width: 100%;"
+        ),
+        onClick --> { _ => practiceMode.toggle() }
+      ),
+      child <-- practiceMode.isActive.signal.map { active =>
+        if active then
+          div(
+            cls := "panel-label",
+            styleAttr := "margin-top: 6px; font-size: 11px; color: #aaa;",
+            child.text <-- practiceMode.revealedCount.signal.map { count =>
+              val scaleType = scaleTypeVar.now()
+              val intervals = Scale.scaleIntervals.getOrElse(scaleType, Scale.scaleIntervals("major"))
+              val total = intervals.size - 1
+              s"Revealing note $count / $total"
+            }
+          )
+        else
+          div(
+            cls := "panel-label",
+            styleAttr := "margin-top: 6px; font-size: 11px; color: #888;",
+            "Shows only roots, then reveals scale notes one by one"
+          )
       }
     ),
 
