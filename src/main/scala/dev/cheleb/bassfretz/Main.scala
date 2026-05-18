@@ -224,10 +224,11 @@ import scala.scalajs.js
   rootKeyVar.signal
     .combineWith(practiceMode.isActive.signal)
     .combineWith(practiceMode.revealedCount.signal)
+    .combineWith(practiceMode.currentSegmentIdx.signal)
     .foreach { tuple =>
       val rootKey = tuple._1
       val practicing = tuple._2
-      val _revealedCount = tuple._3
+      // tuple._3 = revealedCount, tuple._4 = segmentIdx (both trigger re-render)
       if practicing then renderPractice(rootKey)
     }(using unsafeWindowOwner)
 

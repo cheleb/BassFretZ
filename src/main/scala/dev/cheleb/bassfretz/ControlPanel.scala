@@ -123,18 +123,22 @@ object ControlPanel:
           div(
             cls := "panel-label",
             styleAttr := "margin-top: 6px; font-size: 11px; color: #aaa;",
-            child.text <-- practiceMode.revealedCount.signal.map { count =>
-              val scaleType = scaleTypeVar.now()
-              val intervals = Scale.scaleIntervals.getOrElse(scaleType, Scale.scaleIntervals("major"))
-              val total = intervals.size - 1
-              s"Revealing note $count / $total"
-            }
+            child.text <-- practiceMode.revealedCount.signal
+              .combineWith(practiceMode.currentSegmentIdx.signal)
+              .map { tuple =>
+                val count = tuple._1
+                val segIdx = tuple._2
+                val rootKey = rootKeyVar.now()
+                val segments = practiceMode.computeSegments(rootKey)
+                val total = if segments.nonEmpty then segments(segIdx % segments.size).size else 0
+                s"Segment ${segIdx + 1}/${segments.size} — note $count / $total"
+              }
           )
         else
           div(
             cls := "panel-label",
             styleAttr := "margin-top: 6px; font-size: 11px; color: #888;",
-            "Shows only roots, then reveals scale notes one by one"
+            "Shows roots, then reveals path to next root one note at a time"
           )
       }
     ),
