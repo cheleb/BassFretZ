@@ -77,6 +77,19 @@ import scala.scalajs.js
   }(using unsafeWindowOwner)
 
   // =====================================================
+  // PRACTICE MODE
+  // =====================================================
+  val practiceMode = PracticeMode(rootKeyVar, scaleTypeVar)
+
+  // Restart practice cycle when root or scale changes while practicing
+  rootKeyVar.signal.foreach { _ =>
+    practiceMode.restart()
+  }(using unsafeWindowOwner)
+  scaleTypeVar.signal.foreach { _ =>
+    practiceMode.restart()
+  }(using unsafeWindowOwner)
+
+  // =====================================================
   // NOTE CIRCLE
   // =====================================================
   val noteCircleState = NoteCircleState(rootKeyVar, scaleTypeVar)
@@ -143,14 +156,80 @@ import scala.scalajs.js
         noteMeshes.push(outline)
     }
 
+  /** Render for practice mode: shows roots + progressively revealed scale notes. */
+  def renderPractice(rootKey: String): Unit =
+    for i <- 0 until noteMeshes.length do
+      val m = noteMeshes(i)
+      neckGroup.remove(m)
+      m.geometry.asInstanceOf[js.Dynamic].dispose()
+      m.material.asInstanceOf[js.Dynamic].dispose()
+    noteMeshes.length = 0
+
+    val positions = practiceMode.computePracticePositions(rootKey)
+
+    positions.foreach { case (stringIdx, fret, semitone, _noteName) =>
+      val isRoot = semitone == 0
+      val color = Scale.intervalColors.getOrElse(semitone, 0xffffff)
+      val radius = if isRoot then 0.14 else 0.08
+
+      val sphere = Mesh(
+        geometry = SphereGeometry(radius, 16, 16, 0, Math.PI * 2, 0, Math.PI),
+        material = MeshStandardMaterial(
+          color = color,
+          roughness = 0.3,
+          metalness = 0.2,
+          emissive = color,
+          emissiveIntensity = if isRoot then 1.2 else 0.7
+        )
+      )
+
+      val xPos = Scale.stringXPositions(stringIdx)
+      val zPos = Scale.getFretZPosition(fret, Neck.scaleLength)
+      val yPos = Neck.neckHeight / 2 + 0.15
+
+      sphere.position.set(xPos, yPos, zPos)
+      neckGroup.add(sphere)
+      noteMeshes.push(sphere)
+
+      if isRoot then
+        val outlineMat = MeshBasicMaterial(color = 0xffffff)
+        outlineMat.asInstanceOf[js.Dynamic].transparent = true
+        outlineMat.asInstanceOf[js.Dynamic].opacity = 0.35
+        outlineMat.asInstanceOf[js.Dynamic].wireframe = true
+        val outline = Mesh(
+          geometry = SphereGeometry(radius * 1.4, 16, 16, 0, Math.PI * 2, 0, Math.PI),
+          material = outlineMat
+        )
+        outline.position.set(xPos, yPos, zPos)
+        neckGroup.add(outline)
+        noteMeshes.push(outline)
+    }
+
   // =====================================================
   // WIRE STATE -> THREE.JS
   // =====================================================
 
+  // Normal mode rendering (when practice is off)
   rootKeyVar.signal
     .combineWith(selectedIntervalsVar.signal)
-    .foreach { case (rootKey, intervals) =>
-      renderSelection(rootKey, intervals)
+    .combineWith(practiceMode.isActive.signal)
+    .foreach { tuple =>
+      val rootKey = tuple._1
+      val intervals = tuple._2
+      val practicing = tuple._3
+      if !practicing then renderSelection(rootKey, intervals)
+    }(using unsafeWindowOwner)
+
+  // Practice mode rendering (when practice is on)
+  rootKeyVar.signal
+    .combineWith(practiceMode.isActive.signal)
+    .combineWith(practiceMode.revealedCount.signal)
+    .combineWith(practiceMode.currentSegmentIdx.signal)
+    .foreach { tuple =>
+      val rootKey = tuple._1
+      val practicing = tuple._2
+      // tuple._3 = revealedCount, tuple._4 = segmentIdx (both trigger re-render)
+      if practicing then renderPractice(rootKey)
     }(using unsafeWindowOwner)
 
    // =====================================================
@@ -158,7 +237,7 @@ import scala.scalajs.js
    // =====================================================
    val panelContainer = dom.document.createElement("div")
    dom.document.body.appendChild(panelContainer)
-   render(panelContainer, ControlPanel.render(rootKeyVar, scaleTypeVar, selectedIntervalsVar, noteCircleState))
+   render(panelContainer, ControlPanel.render(rootKeyVar, scaleTypeVar, selectedIntervalsVar, noteCircleState, practiceMode))
 
   // =====================================================
   // BOTTOM HINT
@@ -169,7 +248,7 @@ import scala.scalajs.js
     hintContainer,
     div(
       styleAttr := "position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); color: #888; font-family: monospace; font-size: 12px; background: rgba(0,0,0,0.5); padding: 6px 12px; border-radius: 4px; z-index: 100;",
-      "Bass Neck \u2022 Drag to rotate \u2022 Scroll to zoom"
+      "Bass Neck • Drag to rotate • Scroll to zoom"
     )
   )
 
