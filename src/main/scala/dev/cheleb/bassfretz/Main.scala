@@ -5,6 +5,7 @@ import com.raquo.laminar.api.L.*
 import org.scalajs.dom
 import org.scalajs.dom.window
 import scala.scalajs.js
+import scala.scalajs.js.annotation.JSExportTopLevel
 
 @main def main: Unit =
 
@@ -70,6 +71,7 @@ import scala.scalajs.js
   val rootKeyVar = Var("A")
   val scaleTypeVar = Var("major")
   val selectedIntervalsVar = Var(Set(0, 2, 4, 5, 7, 9, 11)) // Default to major scale
+  val menuOpen = Var(false)
 
   // When scale type changes, update selected intervals to match the scale pattern
   scaleTypeVar.signal.foreach { scaleType =>
@@ -233,14 +235,20 @@ import scala.scalajs.js
     }(using unsafeWindowOwner)
 
    // =====================================================
-   // LAMINAR CONTROL PANEL
+   // LAMINAR CONTROL PANEL  (visibility controlled by menu)
    // =====================================================
    val panelContainer = dom.document.createElement("div")
    dom.document.body.appendChild(panelContainer)
    render(panelContainer, ControlPanel.render(rootKeyVar, scaleTypeVar, selectedIntervalsVar, noteCircleState, practiceMode))
 
-  // =====================================================
-  // BOTTOM HINT
+   // When-menu-open = panel VISIBLE; when menu closes = panel hidden
+    menuOpen.signal.foreach { open =>
+      val el = dom.document.getElementById("control-panel").asInstanceOf[dom.html.Element]
+      if (el != null) el.style.display = if (open) "" else "none"
+    }(using unsafeWindowOwner)
+
+   // =====================================================
+   // BOTTOM HINT
   // =====================================================
   val hintContainer = dom.document.createElement("div")
   dom.document.body.appendChild(hintContainer)
@@ -252,8 +260,30 @@ import scala.scalajs.js
     )
   )
 
-  // =====================================================
-  // RENDER LOOP
+    // =====================================================
+    // TOP-LEFT MENU BUTTON  (toggles panel visibility)
+    // =====================================================
+    val menuContainer = dom.document.createElement("div")
+    dom.document.body.appendChild(menuContainer)
+    render(
+      menuContainer,
+      div(
+        idAttr := "menu-wrapper",
+
+        // Hamburger button — sits flush at the top-left corner
+        button(
+          idAttr := "menu-button",
+          title := "Show/hide panel" ,
+          child.text <-- menuOpen.signal.map(open => if (open) "▲" else "☰"),
+          onClick --> { _ => menuOpen.update(!_) }
+        ),
+
+        // Tiny dropdown — "Hide control panel" / "Show control panel"
+      )
+    )
+
+   // =====================================================
+   // RENDER LOOP
   // =====================================================
   val animate: () => Unit = () =>
     controls.update()
