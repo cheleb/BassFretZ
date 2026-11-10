@@ -1,6 +1,6 @@
 import org.scalajs.linker.interface.ModuleSplitStyle
 
-val scala3 = "3.8.3"
+val scala3 = "3.10.1"
 
 name := "bassfretz"
 
